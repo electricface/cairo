@@ -9,10 +9,6 @@ type array struct {
 
 }
 
-type backend struct {
-
-}
-
 type boxes struct {
 
 }

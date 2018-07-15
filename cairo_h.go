@@ -73,13 +73,13 @@ const (
 type Format int
 
 const (
-	FormatInvalid Format = -1
-	FormatARGB32 = 0
-	FormatRGB24 = 1
-	FormatA8 = 2
-	FormatA1 = 1
-	FormatRGB16_565 = 4
-	FormatRGB30 = 5
+	FormatInvalid Format = iota -1
+	FormatARGB32
+	FormatRGB24
+	FormatA8
+	FormatA1
+	FormatRGB16_565
+	FormatRGB30
 )
 
 type RectangleInt struct {

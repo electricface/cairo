@@ -1,18 +1,10 @@
 package cairo
 
 type Cairo struct {
-	status Status
-	Backend *Backend
+	status  Status
+	backend backend
 }
 
 func (cr *Cairo) Status() Status {
 	return cr.status
 }
-
-type Backend struct {
-
-}
-
-
-
-
