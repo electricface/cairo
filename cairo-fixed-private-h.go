@@ -129,22 +129,23 @@ func (f fixed16_16) toDouble() float64 {
 }
 
 func (a fixed) mul(b fixed) fixed {
-	var temp int64 = int32x32_64mul(a, b)
-	return int64ToInt32(int64Rsl(temp, fixedFracBits))
+	var temp = int64(a) * int64(b)
+	return fixed(int64(uint64(temp) >> fixedFracBits))
 }
 
 func (a fixed) mulDiv(b, c fixed) fixed {
-	var ab int64 = int32x32_64mul(a, b)
-	var c64 int64 = int32ToInt64(c)
-	var int64ToInt32(int64Divrem(ab, c64).quo)
+	var ab = int64(a) * int64(b)
+	var c64 = int64(c)
+	return fixed(int64DivRem(ab, c64).quo)
 }
 
 func (a fixed) mulDivFloor(b, c fixed) fixed {
-	return int64_32div(int32x32_64mul(a, b), c)
+	ab := int64(a) * int64(b)
+	return fixed(ab / int64(c))
 }
 
 func edgeComputeIntersectionYForX(p1, p2 *point, x fixed) fixed {
-	var y , dx fixed
+	var y, dx fixed
 
 	if x == p1.x {
 		return p1.y
@@ -156,12 +157,12 @@ func edgeComputeIntersectionYForX(p1, p2 *point, x fixed) fixed {
 	y = p1.y
 	dx = p2.x - p1.x
 	if dx != 0 {
-		y += (x - p1.x).mulDivFloor(p2.y - p1.y, dx)
+		y += (x - p1.x).mulDivFloor(p2.y-p1.y, dx)
 	}
 	return y
 }
 
-func edgeComputeIntersectionXForY(p1,p2 *point, y fixed) fixed {
+func edgeComputeIntersectionXForY(p1, p2 *point, y fixed) fixed {
 	var x, dy fixed
 	if y == p1.y {
 		return p1.x
@@ -173,7 +174,7 @@ func edgeComputeIntersectionXForY(p1,p2 *point, y fixed) fixed {
 	x = p1.x
 	dy = p2.y - p1.y
 	if dy != 0 {
-		x += (y - p1.y).mulDivFloor(p2.x - p1.x, dy)
+		x += (y - p1.y).mulDivFloor(p2.x-p1.x, dy)
 	}
 	return x
 }
@@ -200,7 +201,7 @@ func segmentIntersection(seg1p1, seg1p2, seg2p1, seg2p2, intersection *point) bo
 		return false
 	}
 
-	intersection.x = seg1p1.x + fixedFromDouble(uA * seg1dx)
-	intersection.y = seg1p1.y + fixedFromDouble(uA * seg1dy)
+	intersection.x = seg1p1.x + fixedFromDouble(uA*seg1dx)
+	intersection.y = seg1p1.y + fixedFromDouble(uA*seg1dy)
 	return true
 }

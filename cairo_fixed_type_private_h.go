@@ -9,11 +9,6 @@ type fixed48_16 int64
 type fixed64_64 int128
 type fixed96_32 int128
 
-type int128 struct{
-	a int64
-	b int64
-}
-
 const fixedBits = 32
 const fixedFracBits = 8
 

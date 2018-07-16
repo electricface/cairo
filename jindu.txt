@@ -11,6 +11,8 @@ cairo-box-inline.h
 cairo-boxes-private.h
 cairo-spans-private.h
 cairo-boxes.c
+wideint-private.h
+wideint-type-private.h
 
 忽略:
 cairo-arc-private.h
