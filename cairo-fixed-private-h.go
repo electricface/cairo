@@ -57,6 +57,10 @@ func (f fixed) ceil() fixed {
 }
 
 func (f fixed) round() fixed {
+	return (f + (fixedFracMask+1)/2).floor()
+}
+
+func (f fixed) roundDown() fixed {
 	return (f + fixedFracMask/2).floor()
 }
 
