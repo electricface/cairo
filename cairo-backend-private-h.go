@@ -120,6 +120,9 @@ type backend interface {
 
 	copyPage(cr *Cairo) Status
 	showPage(cr *Cairo) Status
+
+	tagBegin(cr *Cairo, tagName, attributes string) Status
+	tagEnd(cr *Cairo, tagName string) Status
 }
 
 type FontFace struct {

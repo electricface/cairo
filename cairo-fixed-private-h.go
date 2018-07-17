@@ -91,7 +91,7 @@ func (f fixed) integerCeil() int {
 	if f > 0 {
 		return int(((f - 1) >> fixedFracBits) + 1)
 	}
-	return int(-(-f >> fixedFracBits))
+	return int(-(fixed(-fixedUnsigned(f)) >> fixedFracBits))
 }
 
 func (f fixed) to16_16() fixed16_16 {

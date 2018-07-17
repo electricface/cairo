@@ -100,9 +100,6 @@ type surfaceSubsurface struct {
 type surfaceWrapper struct {
 }
 
-type traps struct {
-}
-
 type tristrip struct {
 }
 
@@ -167,6 +164,7 @@ type fontOptions struct {
 	hintStyle           HintStyle
 	hintMetrics         HintMetrics
 	roundGlyphPositions roundGlyphPositions
+	variations          string
 }
 
 type glyphTextInfo struct {

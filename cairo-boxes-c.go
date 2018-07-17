@@ -255,12 +255,7 @@ func (boxes *boxes) clear() {
 	boxes.isPixelAligned = true
 }
 
-func (boxes *boxes) toArray(forceAllocation bool) []box {
-	if boxes.chunks.Len() == 1 && !forceAllocation {
-		front := boxes.chunks.Front()
-		return front.Value.(boxesChunk).boxes
-	}
-
+func (boxes *boxes) toArray() []box {
 	ret := make([]box, boxes.numBoxes)
 
 	j := 0

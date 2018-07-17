@@ -12,6 +12,13 @@ func boxFromIntegers(box *box, x, y, width, height int) {
 	box.p2.y = fixedFromInt(y + height)
 }
 
+func boxFromRectangleInt(box *box, rect *RectangleInt) {
+	box.p1.x = fixedFromInt(rect.X)
+	box.p1.y = fixedFromInt(rect.Y)
+	box.p2.x = fixedFromInt(rect.X + rect.Width)
+	box.p2.y = fixedFromInt(rect.Y + rect.Height)
+}
+
 func (box *box) addPoint(point *point) {
 	if point.x < box.p1.x {
 		box.p1.x = point.x

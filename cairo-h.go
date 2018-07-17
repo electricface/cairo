@@ -1,21 +1,16 @@
 package cairo
 
 type Surface struct {
-
 }
 
 type Device struct {
-
 }
-
 
 type Matrix struct {
 	XX, YX, XY, YY, X0, Y0 float64
 }
 
-
 type Pattern struct {
-
 }
 
 type Status int
@@ -60,20 +55,25 @@ const (
 	StatusInvalidMeshConstruction
 	StatusDeviceFinished
 	StatusJBIG2GlobalMissing
+	StatusPngError
+	StatusFreeTypeError
+	StatusWin32GdiError
+	StatusTagError
+	StatusLastStatus
 )
 
 type Content int
 
 const (
-	ContentColor Content = 0x1000
-	ContentAlpha = 0x2000
-	ContentColorAlpha = 0x3000
+	ContentColor      Content = 0x1000
+	ContentAlpha              = 0x2000
+	ContentColorAlpha         = 0x3000
 )
 
 type Format int
 
 const (
-	FormatInvalid Format = iota -1
+	FormatInvalid Format = iota - 1
 	FormatARGB32
 	FormatRGB24
 	FormatA8
@@ -133,12 +133,14 @@ const (
 )
 
 type FillRule int
+
 const (
 	FillRuleWinding FillRule = iota
 	FillRuleEvenOdd
 )
 
 type LineCap int
+
 const (
 	LineCapButt LineCap = iota
 	LineCapRound
@@ -146,6 +148,7 @@ const (
 )
 
 type LineJoin int
+
 const (
 	LineJoinMiter LineJoin = iota
 	LineJoinRound
@@ -157,23 +160,23 @@ type Rectangle struct {
 }
 
 type RectangleList struct {
-	Status Status
+	Status     Status
 	Rectangles []Rectangle
 }
 
 type Glyph struct {
 	Index int
-	X, Y float64
+	X, Y  float64
 }
 
 type TextCluster struct {
-	NumBytes int
+	NumBytes  int
 	NumGlyphs int
 }
 
 type TextClusterFlag int
-const TextClusterFlagBackward TextClusterFlag = 1
 
+const TextClusterFlagBackward TextClusterFlag = 1
 
 type TextExtents struct {
 	XBearing, YBearing,
@@ -186,6 +189,7 @@ type FontExtents struct {
 }
 
 type FontSlant int
+
 const (
 	SlantNormal FontSlant = iota
 	SlantItalic
@@ -193,12 +197,14 @@ const (
 )
 
 type FontWeight int
+
 const (
 	FontWeightNormal FontWeight = iota
 	FontWeightBold
 )
 
 type SubpixelOrder int
+
 const (
 	SubpixelOrderDefault SubpixelOrder = iota
 	SubpixelOrderRGB
@@ -208,6 +214,7 @@ const (
 )
 
 type HintStyle int
+
 const (
 	HintStyleDefault HintStyle = iota
 	HintStyleNone
@@ -217,6 +224,7 @@ const (
 )
 
 type HintMetrics int
+
 const (
 	HintMetricsDefault HintMetrics = iota
 	HintMetricsOff
@@ -224,6 +232,7 @@ const (
 )
 
 type FontType int
+
 const (
 	FontTypeToy FontType = iota
 	FontTypeFt
@@ -233,6 +242,7 @@ const (
 )
 
 type PathDataType int
+
 const (
 	PathDataTypeMoveTo PathDataType = iota
 	PathDataTypeLineTo
@@ -242,7 +252,7 @@ const (
 
 type PathData struct {
 	Header struct {
-		Type int
+		Type   int
 		Length int
 	}
 	Point struct {
@@ -252,10 +262,11 @@ type PathData struct {
 
 type Path struct {
 	Status Status
-	Data []PathData
+	Data   []PathData
 }
 
 type DeviceType int
+
 const (
 	DeviceTypeDRM DeviceType = iota
 	DeviceTypeGL
@@ -268,18 +279,21 @@ const (
 )
 
 type SurfaceObserverMode int
+
 const (
-	SurfaceObserverNormal SurfaceObserverMode = 0
-	SurfaceObserverRecordOperations = 0x1
+	SurfaceObserverNormal           SurfaceObserverMode = 0
+	SurfaceObserverRecordOperations                     = 0x1
 )
 
 type SurfaceType int
+
 const (
 	SurfaceTypeImage SurfaceType = iota
 	SurfaceTypeXLib
 )
 
 type PatternType int
+
 const (
 	PatternTypeSolid PatternType = iota
 	PatternTypeSurface
@@ -290,6 +304,7 @@ const (
 )
 
 type Extend int
+
 const (
 	ExtendNone Extend = iota
 	ExtendRepeat
@@ -298,6 +313,7 @@ const (
 )
 
 type Filter int
+
 const (
 	FilterFast Filter = iota
 	FilterGood
@@ -308,11 +324,9 @@ const (
 )
 
 type RegionOverlap int
+
 const (
 	RegionOverlapIn RegionOverlap = iota
 	RegionOverlapOut
 	RegionOverlapPart
 )
-
-
-

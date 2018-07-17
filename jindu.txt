@@ -11,8 +11,10 @@ cairo-box-inline.h
 cairo-boxes-private.h
 cairo-spans-private.h
 cairo-boxes.c
-wideint-private.h
-wideint-type-private.h
+cairo-wideint-private.h
+cairo-wideint-type-private.h
+cairo-error.c
+cairo-error-private.h
 
 忽略:
 cairo-arc-private.h
@@ -20,3 +22,4 @@ cairo-array.h
 cairo-array-private.h
 cairo-base64-stream.c
 cairo-base85-stream.c
+cairo-line-private.h
