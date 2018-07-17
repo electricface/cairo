@@ -10,9 +10,6 @@ type Matrix struct {
 	XX, YX, XY, YY, X0, Y0 float64
 }
 
-type Pattern struct {
-}
-
 type Status int
 
 const (

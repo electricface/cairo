@@ -47,9 +47,6 @@ type damage struct {
 type deviceBackend struct {
 }
 
-type fontFaceBackend struct {
-}
-
 type gstate struct {
 }
 
@@ -79,12 +76,6 @@ type glyphSize struct {
 type scaledFontSubsets struct {
 }
 
-type solidPattern struct {
-}
-
-type surfaceAttributes struct {
-}
-
 type surfaceBackend struct {
 }
 
@@ -103,9 +94,6 @@ type surfaceWrapper struct {
 type tristrip struct {
 }
 
-type unscaledFontBackend struct {
-}
-
 type xlibScreenInfo struct {
 }
 
@@ -113,9 +101,6 @@ type userDataArray struct {
 }
 
 type scaledFontPrivate struct {
-}
-
-type scaledFontBackend struct {
 }
 
 type scaledGlyph struct {

@@ -1,4 +1,4 @@
-
+cairo tag 1.15.12
 
 完成:
 cairo-arc.c
@@ -15,6 +15,8 @@ cairo-wideint-private.h
 cairo-wideint-type-private.h
 cairo-error.c
 cairo-error-private.h
+cairo-composite-rectangles-private.h
+cairo-pattern-private.h
 
 忽略:
 cairo-arc-private.h
