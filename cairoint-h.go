@@ -158,19 +158,26 @@ const (
 	opearatorBoundBySource = 1 << 2
 )
 
-var colorWhite = stockColor(stockWhite)
-var colorBlack = stockColor(stockBlack)
-var colorTransparent = stockColor(stockTransparent)
+var pColorWhite = stockColor(stockWhite)
+var pColorBlack = stockColor(stockBlack)
+var pColorTransparent = stockColor(stockTransparent)
 
 func (p *polygon) isEmpty() bool {
 	return len(p.edges) == 0 ||
 		p.extents.p2.x <= p.extents.p1.x
 }
 
-static inline cairo_bool_t
-_cairo_matrix_is_identity (const cairo_matrix_t *matrix)
-{
-return (matrix->xx == 1.0 && matrix->yx == 0.0 &&
-matrix->xy == 0.0 && matrix->yy == 1.0 &&
-matrix->x0 == 0.0 && matrix->y0 == 0.0);
+func (m *Matrix) isIdentity() bool {
+	return m.XX == 1 && m.YX == 0 &&
+		m.XY == 0 && m.YY == 1 &&
+		m.X0 == 0 && m.Y0 == 0
+}
+
+func (m *Matrix) isTranslation() bool {
+	return m.XX == 1 && m.YX == 0 &&
+		m.XY == 0 && m.YY == 1
+}
+
+func (m *Matrix) IsScale() bool {
+	return m.YX == 0 && m.XY == 00
 }

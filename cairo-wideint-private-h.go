@@ -53,3 +53,21 @@ func (v int128) toInt64() int64 {
 func (v int128) toInt32() int32 {
 	return int32(v.toInt64())
 }
+
+func uint64Cmp(a, b uint64) int {
+	if a == b {
+		return 0
+	} else if a < b {
+		return -1
+	}
+	return 1
+}
+
+func int64Cmp(a, b int64) int {
+	if a == b {
+		return 0
+	} else if a < b {
+		return -1
+	}
+	return 1
+}

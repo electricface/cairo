@@ -17,6 +17,12 @@ cairo-error.c
 cairo-error-private.h
 cairo-composite-rectangles-private.h
 cairo-pattern-private.h
+cairoint.h
+cairo-color.c
+cairo-line-inline.h
+cairo-line-private.h
+cairo-slope-private.h
+cairo-slope.c
 
 忽略:
 cairo-arc-private.h
@@ -25,3 +31,7 @@ cairo-array-private.h
 cairo-base64-stream.c
 cairo-base85-stream.c
 cairo-line-private.h
+cairo-compiler-private.h
+cairo-mutex-private.h
+cairo-reference-count-private.h
+
