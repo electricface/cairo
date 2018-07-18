@@ -261,7 +261,7 @@ type splineKnots struct {
 	a, b, c, d point
 }
 
-type splineAddPointFunc func(point *point, tangent *slope)
+type splineAddPointFunc func(point *point, tangent *slope) Status
 
 type spline struct {
 	addPointFunc splineAddPointFunc

@@ -23,6 +23,7 @@ cairo-line-inline.h
 cairo-line-private.h
 cairo-slope-private.h
 cairo-slope.c
+cairo-spline.c
 
 忽略:
 cairo-arc-private.h
