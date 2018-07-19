@@ -24,10 +24,10 @@ cairo-line-private.h
 cairo-slope-private.h
 cairo-slope.c
 cairo-spline.c
+cairo-matrix.c
 
 进行中:
 cairo-rectangle.c
-cairo-matrix.c
 
 忽略:
 cairo-arc-private.h

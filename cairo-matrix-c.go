@@ -303,3 +303,124 @@ func (m *Matrix) computeDeterminat() float64 {
 	d := m.YY
 	return a*d - b*c
 }
+
+func (m *Matrix) computeBasicScaleFactors(basisScale, normalScale *float64, xBasis bool) Status {
+	det := m.computeDeterminat()
+
+	if math.IsInf(det, 0) {
+		return StatusInvalidMatrix.error()
+	}
+
+	if det == 0 {
+		*basisScale = 0
+		*normalScale = 0
+	} else {
+		var x, y float64
+		if xBasis {
+			x = 1
+		}
+		if x == 0 {
+			y = 1
+		}
+		var major, minor float64
+
+		m.TransformDistance(&x, &y)
+		major = math.Hypot(x, y)
+		/*
+		 * ignore mirroring
+		 */
+		if det < 0 {
+			det = -det
+		}
+
+		if major != 0 {
+			minor = det / major
+		} else {
+			minor = 0
+		}
+
+		if xBasis {
+			*basisScale = major
+			*normalScale = minor
+		} else {
+			*basisScale = minor
+			*normalScale = major
+		}
+	}
+
+	return StatusSuccess
+}
+
+func (m *Matrix) isIntegerTranslation(itx, ity *int) bool {
+	if m.isTranslation() {
+		x0Fixed := fixedFromDouble(m.X0)
+		y0Fixed := fixedFromDouble(m.Y0)
+
+		if x0Fixed.IsInteger() && y0Fixed.IsInteger() {
+			if itx != nil {
+				*itx = x0Fixed.integerPart()
+			}
+			if ity != nil {
+				*ity = x0Fixed.integerPart()
+			}
+			return true
+		}
+	}
+	return false
+}
+
+var scalingEpsilon = fixed(1).toDouble()
+
+func (m *Matrix) hasUnityScale() bool {
+	/* check that the determinant is near +/-1 */
+	det := m.computeDeterminat()
+	if math.Abs(det*det-1) < scalingEpsilon {
+		/* check that one axis is close to zero */
+		if math.Abs(m.XY) < scalingEpsilon &&
+			math.Abs(m.YX) < scalingEpsilon {
+			return true
+		}
+		if math.Abs(m.XX) < scalingEpsilon &&
+			math.Abs(m.YY) < scalingEpsilon {
+			return true
+		}
+		/* If rotations are allowed then it must instead test for
+		 * orthogonality. This is xx*xy+yx*yy ~= 0.
+		 */
+	}
+	return false
+}
+
+func (m *Matrix) isPixelExact() bool {
+	if !m.hasUnityScale() {
+		return false
+	}
+
+	x0Fixed := fixedFromDouble(m.X0)
+	y0Fixed := fixedFromDouble(m.Y0)
+
+	return x0Fixed.IsInteger() && y0Fixed.IsInteger()
+}
+
+func (m *Matrix) transformedCircleMajorAxis(radius float64) float64 {
+	if m.hasUnityScale() {
+		return radius
+	}
+	var a, b, c, d, f, g, h, i, j float64
+	m.getAffine(&a, &b,
+		&c, &d,
+		nil, nil)
+
+	i = a*a + b*b
+	j = c*c + d*d
+
+	f = 0.5 * (i + j)
+	g = 0.5 * (i - j)
+	h = a*c + b*d
+
+	return radius * math.Sqrt(f+math.Hypot(g, h))
+	/*
+	* we don't need the minor axis length, which is
+	* double min = radius * sqrt (f - sqrt (g*g+h*h));
+	 */
+}
