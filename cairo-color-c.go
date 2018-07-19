@@ -26,7 +26,7 @@ func stockColor(stock stock) *color {
 	case stockTransparent:
 		return &colorTransparent
 	default:
-		notReached()
+		assertNotReached()
 		return &colorMagenta
 	}
 }

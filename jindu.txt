@@ -29,9 +29,9 @@ cairo-rectangle.c
 cairo-stroke-dash-private.h
 cairo-stroke-dash.c
 cairo-path-fixed-private.h
+cairo-stroke-style.c
 
 进行中:
-cairo-stroke-style.c
 
 忽略:
 cairo-arc-private.h

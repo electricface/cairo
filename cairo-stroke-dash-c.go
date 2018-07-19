@@ -42,12 +42,12 @@ func (dash *strokerDash) step(step float64) {
 }
 
 func (dash *strokerDash) init(style *strokeStyle) {
-	dash.dashed = style.dash != nil
+	dash.dashed = style.dashes != nil
 	if !dash.dashed {
 		return
 	}
 
-	dash.dashes = style.dash
+	dash.dashes = style.dashes
 	dash.dashOffset = style.dashOffset
 	dash.start()
 }

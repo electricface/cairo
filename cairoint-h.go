@@ -7,7 +7,7 @@ import (
 
 const mSqrt1_2 = 0.707106781186547524400844362104849039
 
-func notReached() {
+func assertNotReached() {
 	panic("not reached")
 }
 

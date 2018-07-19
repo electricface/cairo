@@ -289,7 +289,7 @@ type strokeStyle struct {
 	lineCap    LineCap
 	lineJoin   LineJoin
 	miterLimit float64
-	dash       []float64
+	dashes     []float64
 	dashOffset float64
 }
 
