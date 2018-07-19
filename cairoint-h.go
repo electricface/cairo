@@ -126,6 +126,19 @@ type surfaceAttributes struct {
 	extra             interface{}
 }
 
+const (
+	gstateOperatorDefault                  = OperatorOver
+	gstateToleranceDefault                 = 0.1
+	gstateFillRuleDefault                  = FillRuleWinding
+	gstateLineWidthDefault                 = 2.0
+	gstateLineCapDefault                   = LineCapButt
+	gstateLineJoinDefault                  = LineJoinMiter
+	gstateMiterLimitDefault                = 10.0
+	gstateDefaultFontSize                  = 10.0
+	gstateSurfaceResolutionDefault         = 72
+	gstateSurfaceFallbackResolutionDefault = 300
+)
+
 type strokeFace struct {
 	ccw       point
 	point     point
