@@ -181,3 +181,17 @@ func (m *Matrix) isTranslation() bool {
 func (m *Matrix) IsScale() bool {
 	return m.YX == 0 && m.XY == 00
 }
+
+func maxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}

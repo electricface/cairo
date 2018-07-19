@@ -25,9 +25,9 @@ cairo-slope-private.h
 cairo-slope.c
 cairo-spline.c
 cairo-matrix.c
+cairo-rectangle.c
 
 进行中:
-cairo-rectangle.c
 
 忽略:
 cairo-arc-private.h

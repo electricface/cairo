@@ -187,11 +187,11 @@ func (s *spline) decompose(tolerance float64) Status {
 		return status
 	}
 
-	return s.addPointFunc(&s.knots.d, &s.finalSlope)
+	return s.addPointFunc(s.closure, &s.knots.d, &s.finalSlope)
 }
 
 /* Note: this function is only good for computing bounds in device space. */
-func splineBound(addPointFunc splineAddPointFunc, p0, p1, p2, p3 *point) Status {
+func splineBound(addPointFunc splineAddPointFunc, closure interface{}, p0, p1, p2, p3 *point) Status {
 	var x0, x1, x2, x3 float64
 	var y0, y1, y2, y3 float64
 	var a, b, c float64
@@ -297,7 +297,7 @@ func splineBound(addPointFunc splineAddPointFunc, p0, p1, p2, p3 *point) Status 
 	c = -y0 + y1
 	findExtremes(a, b, c)
 
-	status = addPointFunc(p0, nil)
+	status = addPointFunc(closure, p0, nil)
 	if status != 0 {
 		return status
 	}
@@ -334,11 +334,11 @@ func splineBound(addPointFunc splineAddPointFunc, p0, p1, p2, p3 *point) Status 
 
 		p.x = fixedFromDouble(x)
 		p.y = fixedFromDouble(y)
-		status = addPointFunc(&p, nil)
+		status = addPointFunc(closure, &p, nil)
 		if status == 0 {
 			return status
 		}
 	}
 
-	return addPointFunc(p3, nil)
+	return addPointFunc(closure, p3, nil)
 }

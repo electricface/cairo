@@ -261,10 +261,12 @@ type splineKnots struct {
 	a, b, c, d point
 }
 
-type splineAddPointFunc func(point *point, tangent *slope) Status
+type splineAddPointFunc func(closure interface{}, point *point, tangent *slope) Status
 
 type spline struct {
 	addPointFunc splineAddPointFunc
+	closure      interface{}
+
 	knots        splineKnots
 	initialSlope slope
 	finalSlope   slope
