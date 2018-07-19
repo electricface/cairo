@@ -30,3 +30,54 @@ type pathBufFixed struct {
 
 const pathBufSize = 512 - unsafe.Sizeof(pathBuf{})/
 	(2*unsafe.Sizeof(point{})+unsafe.Sizeof(pathOp(0)))
+
+type pathFixed struct {
+	lastMovePoint       point
+	currentPoint        point
+	hasCurrentPoint     bool
+	needsMoveTo         bool
+	hasExtents          bool
+	hasCurveTo          bool
+	strokeIsRectilinear bool
+	fillIsRectilinear0  bool
+	fillMaybeRegion0    bool
+	fillIsEmpty         bool
+	extents             box
+	buf                 pathBufFixed
+}
+
+type pathFixedIter struct {
+	first       *pathBuf
+	buf         *pathBuf
+	nOp, nPoint uint
+}
+
+func (path *pathFixed) fillIsRectilinear() bool {
+	if !path.fillIsRectilinear0 {
+		return false
+	}
+
+	if !path.hasCurrentPoint || path.needsMoveTo {
+		return true
+	}
+
+	/* check whether the implicit close preserves the rectilinear property */
+	return path.currentPoint.x == path.lastMovePoint.x ||
+		path.currentPoint.y == path.lastMovePoint.y
+}
+
+func (path *pathFixed) fillMaybeRegion() bool {
+	if !path.fillMaybeRegion0 {
+		return false
+	}
+
+	if !path.hasCurrentPoint || path.needsMoveTo {
+		return true
+	}
+
+	/* check whether the implicit close preserves the rectilinear property
+	 * (the integer point property is automatically preserved)
+	 */
+	return path.currentPoint.x == path.lastMovePoint.x ||
+		path.currentPoint.y == path.lastMovePoint.y
+}

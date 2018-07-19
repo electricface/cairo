@@ -67,9 +67,6 @@ type outputStream struct {
 type paginatedSurfaceBackend struct {
 }
 
-type pathFixed struct {
-}
-
 type glyphSize struct {
 }
 

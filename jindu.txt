@@ -28,10 +28,10 @@ cairo-matrix.c
 cairo-rectangle.c
 cairo-stroke-dash-private.h
 cairo-stroke-dash.c
+cairo-path-fixed-private.h
 
 进行中:
 cairo-stroke-style.c
-cairo-path-fixed-private.h
 
 忽略:
 cairo-arc-private.h
