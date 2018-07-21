@@ -32,12 +32,13 @@ cairo-path-fixed-private.h
 cairo-stroke-style.c
 cairo-clip-private.h
 cairo-clip-inline.h
+cairo-clip-boxes.c
 
 进行中:
-cairo-clip.c
-*cairo-clip-boxes.c
+*cairo-clip.c
 cairo-path-fill.c
 cairo-boxes-intersect.c
+cairo-path-fixed.c
 
 忽略:
 cairo-arc-private.h

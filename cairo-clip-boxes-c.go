@@ -54,7 +54,7 @@ func (c *clip) containsBox(box *box) bool {
 
 func (c *clip) containsRectangle(rect *RectangleInt) bool {
 	var box box
-	box.fromRectangle(rect)
+	box.fromRectangleInt(rect)
 	return c.containsRectangleBox(rect, &box)
 }
 
@@ -277,5 +277,202 @@ out:
 	if boxes0 == &clipBoxes {
 		clipBoxes.fini()
 	}
+	return c
+}
+
+func (c *clip) intersectRectangle(r *RectangleInt) *clip {
+	if c.isAllClipped() {
+		return c
+	}
+
+	if r.Width == 0 || r.Height == 0 {
+		return c.setAllClipped()
+	}
+
+	var box box
+	box.fromRectangleInt(r)
+	return c.intersectRectangleBox(r, &box)
+}
+
+type reduce struct {
+	clip         *clip
+	limit        box
+	extents      box
+	inside       bool
+	currentPoint point
+	lastMoveTo   point
+}
+
+func addClippedEdge(r *reduce, p1, p2 *point, y1, y2 int) {
+	var x fixed
+	x = edgeComputeIntersectionXForY(p1, p2, fixed(y1))
+	if x < r.extents.p1.x {
+		r.extents.p1.x = x
+	}
+
+	x = edgeComputeIntersectionXForY(p1, p2, fixed(y2))
+	if x > r.extents.p2.x {
+		r.extents.p2.x = x
+	}
+
+	if fixed(y1) < r.extents.p1.y {
+		r.extents.p1.y = fixed(y1)
+	}
+
+	if fixed(y2) > r.extents.p2.y {
+		r.extents.p2.y = fixed(y2)
+	}
+	r.inside = true
+}
+
+func addEdge(r *reduce, p1, p2 *point) {
+	var top, bottom int
+	var topY, botY int
+	var n int
+
+	if p1.y < p2.y {
+		top = int(p1.y)
+		bottom = int(p2.y)
+	} else {
+		top = int(p2.y)
+		bottom = int(p1.y)
+	}
+
+	if bottom < int(r.limit.p1.y) || top > int(r.limit.p2.y) {
+		return
+	}
+
+	if p1.x > p2.x {
+		p1, p2 = p2, p1
+	}
+
+	if p2.x <= r.limit.p1.x || p1.x >= r.limit.p2.x {
+		return
+	}
+
+	for n = 0; n < len(r.clip.boxes); n++ {
+		limits := &r.clip.boxes[n]
+		if bottom < int(limits.p1.y) || top > int(limits.p2.y) {
+			continue
+		}
+
+		if p2.x <= limits.p1.x || p1.x >= limits.p2.x {
+			continue
+		}
+
+		if p1.x >= limits.p1.x && p2.x <= limits.p1.x {
+			topY = top
+			botY = bottom
+		} else {
+			var p1Y, p2Y int
+			p1Y = int(edgeComputeIntersectionYForX(p1, p2, limits.p1.x))
+
+			p2Y = int(edgeComputeIntersectionYForX(p1, p2, limits.p2.x))
+
+			if p1Y < p2Y {
+				topY = p1Y
+				botY = p2Y
+			} else {
+				topY = p2Y
+				botY = p1Y
+			}
+
+			if topY < top {
+				topY = top
+			}
+			if botY > bottom {
+				botY = bottom
+			}
+		}
+
+		if topY < int(limits.p1.y) {
+			topY = int(limits.p1.y)
+		}
+
+		if botY > int(limits.p2.y) {
+			botY = int(limits.p2.y)
+		}
+		if botY > topY {
+			addClippedEdge(r, p1, p2, topY, botY)
+		}
+	}
+
+}
+
+func reduceLineTo(closure interface{}, point *point) Status {
+	r := closure.(*reduce)
+	addEdge(r, &r.currentPoint, point)
+	r.currentPoint = *point
+	return StatusSuccess
+}
+
+func reduceClose(closure interface{}) Status {
+	r := closure.(*reduce)
+	return reduceLineTo(r, &r.lastMoveTo)
+}
+
+func reduceMoveTo(closure interface{}, point *point) Status {
+	r := closure.(*reduce)
+
+	/* close current subpath */
+	status := reduceClose(closure)
+
+	/* make sure that the closure represents a degenerate path */
+	r.currentPoint = *point
+	r.lastMoveTo = *point
+
+	return status
+}
+
+func (c *clip) reduceToBoxes() *clip {
+	//var r reduce
+	//var clipPath *clipPath
+	//var status Status
+
+	return c
+	// TODO: 这段代码很奇特，直接返回了 c
+	// 我在 gitlab.com 上提交了一个 issues https://gitlab.com/cairo/cairo/issues/2
+}
+
+func (c *clip) reduceToRectangle(r *RectangleInt) *clip {
+	if c.isAllClipped() {
+		return c
+	}
+
+	if c.containsRectangle(r) {
+		return (*clip)(nil).intersectRectangle(r)
+	}
+
+	copy0 := c.copyIntersectRectangle(r)
+	if copy0.isAllClipped() {
+		return copy0
+	}
+
+	return copy0.reduceToBoxes()
+}
+
+func (c *clip) reduceForComposite(extents *compoisteRectangles) *clip {
+	var r *RectangleInt
+	if extents.isBounded {
+		r = &extents.bounded
+	} else {
+		r = &extents.unbounded
+	}
+	return c.reduceToRectangle(r)
+}
+
+func clipFromBoxes(boxes *boxes) *clip {
+	c := clipCreate()
+	if c == nil {
+		return c.setAllClipped()
+	}
+
+	if !boxes.copyToClip(c) {
+		return c
+	}
+
+	var extents box
+	boxes.extents(&extents)
+	extents.roundToRectangle(&c.extents)
 	return c
 }

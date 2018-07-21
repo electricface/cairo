@@ -25,7 +25,7 @@ func (b *box) toDoubles() (x1, y1, x2, y2 float64) {
 		b.p2.y.toDouble()
 }
 
-func (b *box) fromRectangle(rect *RectangleInt) {
+func (b *box) fromRectangleInt(rect *RectangleInt) {
 	b.p1.x = fixedFromInt(rect.X)
 	b.p1.y = fixedFromInt(rect.Y)
 	b.p2.x = fixedFromInt(rect.X + rect.Width)
