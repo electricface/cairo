@@ -208,3 +208,17 @@ func minInt(a, b int) int {
 	}
 	return b
 }
+
+func (dst *RectangleInt) intersects(src *RectangleInt) bool {
+	return !(src.X >= dst.X+dst.Width ||
+		src.X+src.Width <= dst.X ||
+		src.Y >= dst.Y+dst.Height ||
+		src.Y+src.Height <= dst.Y)
+}
+
+func (a *RectangleInt) containsRectangle(b *RectangleInt) bool {
+	return a.X <= b.X &&
+		a.X+a.Width >= b.X+b.Width &&
+		a.Y <= b.Y &&
+		a.Y+a.Height >= b.Y+b.Height
+}

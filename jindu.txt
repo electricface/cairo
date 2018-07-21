@@ -30,8 +30,14 @@ cairo-stroke-dash-private.h
 cairo-stroke-dash.c
 cairo-path-fixed-private.h
 cairo-stroke-style.c
+cairo-clip-private.h
+cairo-clip-inline.h
 
 进行中:
+cairo-clip.c
+*cairo-clip-boxes.c
+cairo-path-fill.c
+cairo-boxes-intersect.c
 
 忽略:
 cairo-arc-private.h

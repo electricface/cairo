@@ -14,12 +14,6 @@ type cache struct {
 type compositeRectangles struct {
 }
 
-type clip struct {
-}
-
-type clipPath struct {
-}
-
 type color struct {
 	red, green, blue, alpha                     float64
 	redShort, greenShort, blueShort, alphaShort uint16
