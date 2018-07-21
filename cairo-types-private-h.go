@@ -41,9 +41,6 @@ type damage struct {
 type deviceBackend struct {
 }
 
-type gstate struct {
-}
-
 type gstateBackend struct {
 }
 

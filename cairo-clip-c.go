@@ -539,3 +539,110 @@ func (c *clip) getExtents() *RectangleInt {
 	}
 	return &c.extents
 }
+
+var rectanglesNil = RectangleList{
+	Status: StatusNoMemory,
+}
+
+var rectanglesNotRepresentable = RectangleList{
+	Status: StatusClipNotRepresentable,
+}
+
+func clipIntRectToUser(gstate *gstate, clipRect *RectangleInt, userRect *Rectangle) bool {
+	var isTight bool
+
+	x1 := float64(clipRect.X)
+	y1 := float64(clipRect.Y)
+	x2 := float64(clipRect.X + clipRect.Width)
+	y2 := float64(clipRect.Y + clipRect.Height)
+
+	gstateBackendToUserRectangle(gstate, &x1, &y1, &x2, &y2, &isTight)
+
+	userRect.X = x1
+	userRect.Y = y1
+	userRect.Width = x2 - x1
+	userRect.Height = y2 - y1
+	return isTight
+}
+
+func rectangleListCreateInError(status Status) *RectangleList {
+	var list *RectangleList
+	if status == StatusNoMemory {
+		return &rectanglesNil
+	}
+	if status == StatusClipNotRepresentable {
+		return &rectanglesNotRepresentable
+	}
+
+	list = new(RectangleList)
+	if list == nil {
+		status = StatusNoMemory.error()
+		return &rectanglesNil
+	}
+	list.Status = status
+	list.Rectangles = nil
+	return list
+}
+
+func (c *clip) copyRectangleList(gstate *gstate) *RectangleList {
+	var list *RectangleList
+	var rectangles []Rectangle
+	var region *region
+	var nRects int
+
+	if c == nil {
+		return rectangleListCreateInError(StatusClipNotRepresentable.error())
+	}
+
+	if c.isAllClipped() {
+		goto DONE
+	}
+
+	if !c.getIsRegion() {
+		return rectangleListCreateInError(StatusClipNotRepresentable.error())
+	}
+
+	region = c.getRegion()
+	if region == nil {
+		return rectangleListCreateInError(StatusNoMemory.error())
+	}
+
+	nRects = region.numRectangles()
+	if nRects != 0 {
+		rectangles = make([]Rectangle, nRects)
+		if rectangles == nil {
+			return rectangleListCreateInError(StatusNoMemory.error())
+		}
+
+		for i := 0; i < nRects; i++ {
+			var clipRect RectangleInt
+			region.getRectangle(i, &clipRect)
+			if !clipIntRectToUser(gstate, &clipRect, &rectangles[i]) {
+				rectangles = nil
+				return rectangleListCreateInError(StatusClipNotRepresentable.error())
+			}
+		}
+	}
+
+DONE:
+	list = new(RectangleList)
+	if list == nil {
+		rectangles = nil
+		return rectangleListCreateInError(StatusNoMemory.error())
+	}
+
+	list.Status = StatusSuccess
+	list.Rectangles = rectangles
+	return list
+}
+
+func (list *RectangleList) destroy() {
+	if list == nil || list == &rectanglesNil ||
+		list == &rectanglesNotRepresentable {
+		return
+	}
+	list.Rectangles = nil
+}
+
+func clipResetStaticData() {
+}

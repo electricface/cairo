@@ -33,12 +33,14 @@ cairo-stroke-style.c
 cairo-clip-private.h
 cairo-clip-inline.h
 cairo-clip-boxes.c
+cairo-clip.c
 
 进行中:
-*cairo-clip.c
+*cairo-clip-region.c
 cairo-path-fill.c
 cairo-boxes-intersect.c
 cairo-path-fixed.c
+cairo-gstate-private.c
 
 忽略:
 cairo-arc-private.h
