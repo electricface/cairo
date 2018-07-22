@@ -1,6 +1,13 @@
 package cairo
 
 func (path *pathFixed) init() {
+	path.buf = []*pathBuf{
+		{
+			ops:    path.buf0.ops[:0],
+			points: path.buf0.points[:0],
+		},
+	}
+
 	path.currentPoint.x = 0
 	path.currentPoint.y = 0
 	path.lastMovePoint = path.currentPoint
@@ -35,10 +42,20 @@ func (path *pathFixed) initCopy(other *pathFixed) Status {
 
 	path.extents = other.extents
 
-	path.ops = make([]pathOp, len(other.ops))
-	copy(path.ops, other.ops)
-	path.points = make([]point, len(other.points))
-	copy(path.points, other.points)
+	path.buf = make([]*pathBuf, len(other.buf))
+	path.buf[0] = &pathBuf{
+		ops:    path.buf0.ops[:len(other.buf[0].ops)],
+		points: path.buf0.points[:len(other.buf[0].points)],
+	}
+	for i := 1; i < len(other.buf); i++ {
+		path.buf[i].ops = make([]pathOp, len(other.buf[i].ops))
+		path.buf[i].points = make([]point, len(other.buf[i].points))
+	}
+	for i := 0; i < len(other.buf); i++ {
+		copy(path.buf[i].ops, other.buf[i].ops)
+		copy(path.buf[i].points, other.buf[i].points)
+	}
+
 	return StatusSuccess
 }
 
@@ -59,26 +76,101 @@ func (a *pathFixed) equal(b *pathFixed) bool {
 		return false
 	}
 
-	if len(a.ops) == 0 && len(b.ops) == 0 {
+	numOpsA := 0
+	numPointsA := 0
+	for _, buf := range a.buf {
+		numOpsA += len(buf.ops)
+		numPointsA += len(buf.points)
+	}
+
+	numOpsB := 0
+	numPointsB := 0
+	for _, buf := range b.buf {
+		numOpsB += len(buf.ops)
+		numPointsB += len(buf.points)
+	}
+
+	if numOpsA == 0 && numOpsB == 0 {
 		return true
 	}
 
-	if len(a.ops) != len(b.ops) || len(a.points) != len(b.points) {
+	if numOpsA != numOpsB || numPointsA != numPointsB {
 		return false
 	}
 
-	for i := 0; i < len(a.ops); i++ {
-		if a.ops[i] != b.ops[i] {
-			return false
+	var bufAIdx, bufBIdx int
+	bufA := a.buf[0]
+	opsA := bufA.ops
+	pointsA := bufA.points
+	numOpsA = len(opsA)
+	numPointsA = len(pointsA)
+
+	bufB := b.buf[0]
+	opsB := bufB.ops
+	pointsB := bufB.points
+	numOpsB = len(opsB)
+	numPointsB = len(pointsB)
+
+	for {
+		numOps := minInt(numOpsA, numOpsB)
+		numPoints := minInt(numPointsA, numPointsB)
+
+		for i := 0; i < numOps; i++ {
+			if opsA[i] != opsB[i] {
+				return false
+			}
+		}
+
+		for i := 0; i < numPoints; i++ {
+			if pointsA[i] != pointsB[i] {
+				return false
+			}
+		}
+
+		numOpsA -= numOps
+		opsA = opsA[:numOps]
+		numPointsA -= numPoints
+		pointsA = pointsA[:numPoints]
+
+		if numOpsA == 0 || numPointsA == 0 {
+			if numOpsA != 0 || numPointsA != 0 {
+				return false
+			}
+			// next buf
+			bufAIdx++
+			if bufAIdx == len(a.buf) {
+				break
+			}
+			bufA = a.buf[bufAIdx]
+
+			pointsA = bufA.points
+			numPointsA = len(pointsA)
+			opsA = bufA.ops
+			numOpsA = len(opsA)
+		}
+
+		numOpsB -= numOps
+		opsB = opsB[:numOps]
+		numPointsB -= numPoints
+		pointsB = pointsB[:numPoints]
+
+		if numOpsB == 0 || numPointsB == 0 {
+			if numOpsB != 0 || numPointsB != 0 {
+				return false
+			}
+			// next buf
+			bufBIdx++
+			if bufBIdx == len(b.buf) {
+				break
+			}
+			bufB = b.buf[bufBIdx]
+
+			pointsB = bufB.points
+			numPointsB = len(pointsB)
+			opsB = bufB.ops
+			numOpsB = len(opsB)
 		}
 	}
-
-	for i := 0; i < len(a.points); i++ {
-		if a.points[i] != b.points[i] {
-			return false
-		}
-	}
-
 	return true
 }
 
@@ -96,12 +188,33 @@ func (path *pathFixed) destroy() {
 	return
 }
 
+func (path *pathFixed) head() *pathBuf {
+	return path.buf[0]
+}
+
+func (path *pathFixed) tail() *pathBuf {
+	return path.buf[len(path.buf)-1]
+}
+
 func (path *pathFixed) lastOp() pathOp {
-	return path.ops[len(path.ops)-1]
+	buf := path.tail()
+	return buf.ops[len(buf.ops)-1]
 }
 
 func (path *pathFixed) penultimatePoint() *point {
-	return &path.points[len(path.points)-2]
+	bufIdx := len(path.buf) - 1
+	// buf is tail
+	buf := path.buf[bufIdx]
+	if len(buf.points) >= 2 {
+		return &buf.points[len(buf.points)-2]
+	} else {
+		bufIdx--
+		prevBuf := path.buf[bufIdx]
+		if len(prevBuf.points) < 2-len(buf.points) {
+			panic("assert failed len(prevBuf.points)	>= 2 - len(buf.points)")
+		}
+		return &prevBuf.points[len(prevBuf.points)-(2-len(buf.points))]
+	}
 }
 
 func (path *pathFixed) dropLineTo() {
@@ -109,8 +222,9 @@ func (path *pathFixed) dropLineTo() {
 		panic("assert failed path.lastOp == pathOpLineTo")
 	}
 
-	path.ops = path.ops[:len(path.ops)-1]
-	path.points = path.points[:len(path.points)-1]
+	buf := path.tail()
+	buf.ops = buf.ops[:len(buf.ops)-1]
+	buf.points = buf.points[:len(buf.points)-1]
 }
 
 func (path *pathFixed) moveTo(x, y fixed) Status {
@@ -368,9 +482,35 @@ func (path *pathFixed) getCurrentPoint() (x, y fixed, ok bool) {
 }
 
 func (path *pathFixed) add(op pathOp, points []point) Status {
-	path.ops = append(path.ops, op)
-	path.points = append(path.points, points...)
+	buf := path.tail()
+	if len(buf.ops)+1 > cap(buf.ops) ||
+		len(buf.points)+len(points) > cap(buf.points) {
+		buf = pathBufCreate(len(buf.ops)*2, len(buf.points)*2)
+		path.addBuf(buf)
+	}
+
+	buf.addOp(op)
+	buf.addPoints(points)
 	return StatusSuccess
+}
+
+func (path *pathFixed) addBuf(buf *pathBuf) {
+	path.buf = append(path.buf, buf)
+}
+
+func pathBufCreate(numOps, numPoints int) *pathBuf {
+	return &pathBuf{
+		ops:    make([]pathOp, 0, numOps),
+		points: make([]point, 0, numPoints),
+	}
+}
+
+func (buf *pathBuf) addOp(op pathOp) {
+	buf.ops = append(buf.ops, op)
+}
+
+func (buf *pathBuf) addPoints(points []point) {
+	buf.points = append(buf.points, points...)
 }
 
 func (path *pathFixed) interpret(moveTo pathFixedMoveToFunc,
@@ -382,28 +522,31 @@ func (path *pathFixed) interpret(moveTo pathFixedMoveToFunc,
 	var status Status
 
 	var points []point
-	points = path.points
-	for _, op := range path.ops {
-		switch op {
-		case pathOpMoveTo:
-			status = moveTo(closure, &points[0])
-			points = points[1:]
-		case pathOpLineTo:
-			status = lineTo(closure, &points[0])
-			points = points[1:]
 
-		case pathOpCurveTo:
-			status = curveTo(closure, &points[0], &points[1], &points[2])
-			points = points[3:]
+	for _, buf := range path.buf {
+		points = buf.points
+		for _, op := range buf.ops {
+			switch op {
+			case pathOpMoveTo:
+				status = moveTo(closure, &points[0])
+				points = points[1:]
+			case pathOpLineTo:
+				status = lineTo(closure, &points[0])
+				points = points[1:]
 
-		case pathOpClosePath:
-			status = closePath(closure)
+			case pathOpCurveTo:
+				status = curveTo(closure, &points[0], &points[1], &points[2])
+				points = points[3:]
 
-		default:
-			assertNotReached()
-		}
-		if status != 0 {
-			return status
+			case pathOpClosePath:
+				status = closePath(closure)
+
+			default:
+				assertNotReached()
+			}
+			if status != 0 {
+				return status
+			}
 		}
 	}
 

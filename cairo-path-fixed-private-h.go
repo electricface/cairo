@@ -1,5 +1,9 @@
 package cairo
 
+import (
+	"unsafe"
+)
+
 const (
 	pathOpMoveTo pathOp = iota
 	pathOpLineTo
@@ -9,20 +13,18 @@ const (
 
 type pathOp byte
 
-//type pathBuf struct {
-//	link   *list.List
-//	ops    []pathOp
-//	points []point
-//}
+type pathBuf struct {
+	ops    []pathOp
+	points []point
+}
 
-//type pathBufFixed struct {
-//	base   pathBuf
-//	ops    [pathBufSize]pathOp
-//	points [2 * pathBufSize]point
-//}
+type pathBufFixed struct {
+	ops    [pathBufSize]pathOp
+	points [2 * pathBufSize]point
+}
 
-//const pathBufSize = 512 - unsafe.Sizeof(pathBuf{})/
-//	(2*unsafe.Sizeof(point{})+unsafe.Sizeof(pathOp(0)))
+const pathBufSize = 512 - unsafe.Sizeof(pathBuf{})/
+	(2*unsafe.Sizeof(point{})+unsafe.Sizeof(pathOp(0)))
 
 type pathFixed struct {
 	lastMovePoint        point
@@ -36,10 +38,8 @@ type pathFixed struct {
 	fillMaybeRegion0     bool
 	fillIsEmpty0         bool
 	extents              box
-	//buf                  pathBufFixed
-
-	ops    []pathOp
-	points []point
+	buf0                 pathBufFixed
+	buf                  []*pathBuf
 }
 
 //type pathFixedIter struct {
