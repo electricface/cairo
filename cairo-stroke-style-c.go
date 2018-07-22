@@ -39,7 +39,7 @@ func (style *strokeStyle) maxDistanceFromPath(path *pathFixed, ctm *Matrix) (dx,
 	}
 
 	if style.lineJoin == LineJoinMiter &&
-		!path.strokeIsRectilinear &&
+		!path.strokeIsRectilinear() &&
 		styleExpansion < math.Sqrt2*style.miterLimit {
 		styleExpansion = math.Sqrt2 * style.miterLimit
 	}
@@ -71,7 +71,7 @@ func (style *strokeStyle) maxJoinDistanceFromPath(path *pathFixed, ctm *Matrix) 
 	styleExpansion := 0.5
 
 	if style.lineJoin == LineJoinMiter &&
-		!path.strokeIsRectilinear &&
+		!path.strokeIsRectilinear() &&
 		styleExpansion < math.Sqrt2*style.miterLimit {
 		styleExpansion = math.Sqrt2 * style.miterLimit
 	}

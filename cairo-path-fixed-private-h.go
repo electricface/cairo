@@ -1,14 +1,7 @@
 package cairo
 
-import (
-	"container/list"
-	"unsafe"
-)
-
-type pathOpType byte
-
 const (
-	pathOpMoveTo pathOpType = iota
+	pathOpMoveTo pathOp = iota
 	pathOpLineTo
 	pathOpCurveTo
 	pathOpClosePath
@@ -16,20 +9,20 @@ const (
 
 type pathOp byte
 
-type pathBuf struct {
-	link   *list.List
-	ops    []pathOp
-	points []point
-}
+//type pathBuf struct {
+//	link   *list.List
+//	ops    []pathOp
+//	points []point
+//}
 
-type pathBufFixed struct {
-	base   pathBuf
-	ops    [pathBufSize]pathOp
-	points [pathBufSize]point
-}
+//type pathBufFixed struct {
+//	base   pathBuf
+//	ops    [pathBufSize]pathOp
+//	points [2 * pathBufSize]point
+//}
 
-const pathBufSize = 512 - unsafe.Sizeof(pathBuf{})/
-	(2*unsafe.Sizeof(point{})+unsafe.Sizeof(pathOp(0)))
+//const pathBufSize = 512 - unsafe.Sizeof(pathBuf{})/
+//	(2*unsafe.Sizeof(point{})+unsafe.Sizeof(pathOp(0)))
 
 type pathFixed struct {
 	lastMovePoint        point
@@ -43,14 +36,17 @@ type pathFixed struct {
 	fillMaybeRegion0     bool
 	fillIsEmpty0         bool
 	extents              box
-	buf                  pathBufFixed
+	//buf                  pathBufFixed
+
+	ops    []pathOp
+	points []point
 }
 
-type pathFixedIter struct {
-	first       *pathBuf
-	buf         *pathBuf
-	nOp, nPoint uint
-}
+//type pathFixedIter struct {
+//	first       *pathBuf
+//	buf         *pathBuf
+//	nOp, nPoint uint
+//}
 
 func (path *pathFixed) fillIsEmpty() bool {
 	return path.fillIsEmpty0
@@ -89,3 +85,15 @@ func (path *pathFixed) fillMaybeRegion() bool {
 	return path.currentPoint.x == path.lastMovePoint.x ||
 		path.currentPoint.y == path.lastMovePoint.y
 }
+
+//func (path *pathFixed) head() *pathBuf {
+//	return &path.buf.base
+//}
+//
+//func (pb *pathBuf) next() *pathBuf {
+//	pb.link.next
+//}
+//
+//func (pb *pathBuf) prev() *pathBuf {
+//
+//}
