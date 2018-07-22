@@ -738,5 +738,133 @@ func (path *pathFixed) isBox(box *box) bool {
 	return false
 }
 
-var _ = `
-`
+/* Determine whether two lines A->B and C->D intersect based on the
+ * algorithm described here: http://paulbourke.net/geometry/pointlineplane/ */
+func linesIntersectOrAreCoincident(a, b, c, d point) bool {
+	denominator := (int64(d.y-c.y) * int64(b.x-a.x)) -
+		(int64(d.x-c.x) * int64(b.y-a.y))
+	numeratorA := (int64(d.x-c.x) * int64(a.y-c.y)) -
+		(int64(d.y-c.y) * int64(a.x-c.x))
+	numeratorB := (int64(b.x-a.x) * int64(a.y-c.y)) -
+		(int64(b.y-a.y) * int64(a.x-c.x))
+
+	if denominator == 0 {
+		/* If the denominator and numerators are both zero,
+		 * the lines are coincident. */
+		if numeratorA == 0 && numeratorB == 0 {
+			return true
+		}
+
+		/* Otherwise, a zero denominator indicates the lines are
+		*  parallel and never intersect. */
+		return false
+	}
+
+	/* The lines intersect if both quotients are between 0 and 1 (exclusive). */
+
+	/* We first test whether either quotient is a negative number. */
+	denominatorNegative := denominator < 0
+	if (numeratorA < 0) != denominatorNegative {
+		return false
+	}
+	if (numeratorB < 0) != denominatorNegative {
+		return false
+	}
+
+	/* A zero quotient indicates an "intersection" at an endpoint, which
+	 * we aren't considering a true intersection. */
+	if numeratorA == 0 || numeratorB == 0 {
+		return false
+	}
+
+	/* If the absolute value of the numerator is larger than or equal to the
+	 * denominator the result of the division would be greater than or equal
+	 * to one. */
+	if !denominatorNegative {
+		if !(numeratorA < denominator) || !(numeratorB < denominator) {
+			return false
+		}
+	} else {
+		if !(denominator < numeratorA) || !(denominator < numeratorB) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (path *pathFixed) isSimpleQuad() bool {
+	if !path.isQuad() {
+		return false
+	}
+
+	points := path.points
+	if pointsFromRect(points) {
+		return true
+	}
+
+	if linesIntersectOrAreCoincident(points[0], points[1], points[3], points[2]) {
+		return false
+	}
+
+	if linesIntersectOrAreCoincident(points[0], points[3], points[1], points[2]) {
+		return false
+	}
+
+	return true
+}
+
+func (path *pathFixed) isStrokeBox(box *box) bool {
+	if !path.fillIsRectilinear0 {
+		return false
+	}
+
+	/* Do we have the right number of ops? */
+	if len(path.ops) != 5 {
+		return false
+	}
+
+	/* Check whether the ops are those that would be used for a rectangle */
+	if path.ops[0] != pathOpMoveTo ||
+		path.ops[1] != pathOpLineTo ||
+		path.ops[2] != pathOpLineTo ||
+		path.ops[3] != pathOpLineTo ||
+		path.ops[4] != pathOpClosePath {
+		return false
+	}
+
+	/* Ok, we may have a box, if the points line up */
+	if path.points[0].y == path.points[1].y &&
+		path.points[1].x == path.points[2].x &&
+		path.points[2].y == path.points[3].y &&
+		path.points[3].x == path.points[0].x {
+
+		canonicalBox(box, &path.points[0], &path.points[2])
+		return true
+	}
+
+	if path.points[0].x == path.points[1].x &&
+		path.points[1].y == path.points[2].y &&
+		path.points[2].x == path.points[3].x &&
+		path.points[3].y == path.points[0].y {
+
+		canonicalBox(box, &path.points[0], &path.points[2])
+		return true
+	}
+
+	return false
+}
+
+func (path *pathFixed) isRectangle(box *box) bool {
+	if !path.isBox(box) {
+		return false
+	}
+
+	/* This check is valid because the current implementation of
+	 * _cairo_path_fixed_is_box () only accepts rectangles like:
+	 * move,line,line,line[,line|close[,close|move]]. */
+	if len(path.ops) > 4 {
+		return true
+	}
+	return false
+}
