@@ -222,3 +222,8 @@ func (a *RectangleInt) containsRectangle(b *RectangleInt) bool {
 		a.Y <= b.Y &&
 		a.Y+a.Height >= b.Y+b.Height
 }
+
+type pathFixedMoveToFunc func(closure interface{}, point *point) Status
+type pathFixedLineToFunc func(closure interface{}, point *point) Status
+type pathFixedCurveToFunc func(closure interface{}, p0, p1, p2 *point) Status
+type pathFixedClosePathFunc func(closure interface{}) Status

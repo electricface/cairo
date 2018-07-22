@@ -24,13 +24,14 @@ func splineIntersects(a, b, c, d *point, box0 box) bool {
 	return true
 }
 
-func (s *spline) init(addPointFunc splineAddPointFunc, a, b, c, d *point) bool {
+func (s *spline) init(addPointFunc splineAddPointFunc, closure interface{}, a, b, c, d *point) bool {
 	/* If both tangents are zero, this is just a straight line */
 	if a.x == b.x && a.y == b.y && c.x == d.x && c.y == d.y {
 		return false
 	}
 
 	s.addPointFunc = addPointFunc
+	s.closure = closure
 
 	s.knots.a = *a
 	s.knots.b = *b
