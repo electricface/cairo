@@ -39,10 +39,11 @@ cairo-path-fixed.c
 cairo-path-fill.c
 
 进行中:
+*cairo-traps.c
 cairo-boxes-intersect.c
 cairo-gstate-private.c
-cairo-traps-private.h
 cairo-bentley-ottmann-rectangular.c
+cairo-line.c
 
 忽略:
 cairo-arc-private.h
