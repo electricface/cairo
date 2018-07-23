@@ -36,11 +36,13 @@ cairo-clip-boxes.c
 cairo-clip.c
 cairo-clip-region.c
 cairo-path-fixed.c
+cairo-path-fill.c
 
 进行中:
-*cairo-path-fill.c
 cairo-boxes-intersect.c
 cairo-gstate-private.c
+cairo-traps-private.h
+cairo-bentley-ottmann-rectangular.c
 
 忽略:
 cairo-arc-private.h
