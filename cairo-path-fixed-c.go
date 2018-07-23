@@ -611,20 +611,22 @@ func (path *pathFixed) offsetAndScale(offX, offY, scaleX, scaleY fixed) {
 
 	path.fillMaybeRegion0 = true
 
-	for i := 0; i < len(path.points); i++ {
-		if scaleX != fixedOne {
-			path.points[i].x = path.points[i].x.mul(scaleX)
-		}
-		path.points[i].x += offX
+	for _, buf := range path.buf {
+		for i := 0; i < len(buf.points); i++ {
+			if scaleX != fixedOne {
+				buf.points[i].x = buf.points[i].x.mul(scaleX)
+			}
+			buf.points[i].x += offX
 
-		if scaleY != fixedOne {
-			path.points[i].y = path.points[i].y.mul(scaleY)
-		}
-		path.points[i].y += offY
+			if scaleY != fixedOne {
+				buf.points[i].y = buf.points[i].y.mul(scaleY)
+			}
+			buf.points[i].y += offY
 
-		if path.fillMaybeRegion0 {
-			path.fillMaybeRegion0 = path.points[i].x.IsInteger() &&
-				path.points[i].y.IsInteger()
+			if path.fillMaybeRegion0 {
+				path.fillMaybeRegion0 = buf.points[i].x.IsInteger() &&
+					buf.points[i].y.IsInteger()
+			}
 		}
 	}
 	path.fillMaybeRegion0 = path.fillMaybeRegion0 && path.fillIsRectilinear0
@@ -657,13 +659,15 @@ func (path *pathFixed) translate(offX, offY fixed) {
 
 	path.fillMaybeRegion0 = true
 
-	for i := 0; i < len(path.points); i++ {
-		path.points[i].x += offX
-		path.points[i].y += offY
+	for _, buf := range path.buf {
+		for i := 0; i < len(buf.points); i++ {
+			buf.points[i].x += offX
+			buf.points[i].y += offY
 
-		if path.fillMaybeRegion0 {
-			path.fillMaybeRegion0 = path.points[i].x.IsInteger() &&
-				path.points[i].y.IsInteger()
+			if path.fillMaybeRegion0 {
+				path.fillMaybeRegion0 = buf.points[i].x.IsInteger() &&
+					buf.points[i].y.IsInteger()
+			}
 		}
 	}
 	path.fillMaybeRegion0 = path.fillMaybeRegion0 && path.fillIsRectilinear0
@@ -698,18 +702,21 @@ func (path *pathFixed) transform(matrix *Matrix) {
 	pathFixedTransformPoint(&path.lastMovePoint, matrix)
 	pathFixedTransformPoint(&path.currentPoint, matrix)
 
-	if len(path.points) == 0 {
+	buf := path.head()
+	if len(buf.points) == 0 {
 		return
 	}
 
 	extents = path.extents
-	point = path.points[0]
+	point = buf.points[0]
 	pathFixedTransformPoint(&point, matrix)
 	path.extents.set(&point, &point)
 
-	for i := 0; i < len(path.points); i++ {
-		pathFixedTransformPoint(&path.points[i], matrix)
-		path.extents.addPoint(&path.points[i])
+	for _, buf := range path.buf {
+		for i := 0; i < len(buf.points); i++ {
+			pathFixedTransformPoint(&buf.points[i], matrix)
+			path.extents.addPoint(&buf.points[i])
+		}
 	}
 
 	if path.hasCurveTo {
@@ -809,38 +816,39 @@ func canonicalBox(box *box, p1, p2 *point) {
 }
 
 func (path *pathFixed) isQuad() bool {
+	buf := path.head()
 	/* Do we have the right number of ops? */
-	if len(path.ops) < 4 || len(path.ops) > 6 {
+	if len(buf.ops) < 4 || len(buf.ops) > 6 {
 		return false
 	}
-	//len(path.ops) is 4,5,6
+	//len(buf.ops) is 4,5,6
 
 	/* Check whether the ops are those that would be used for a rectangle */
-	if path.ops[0] != pathOpMoveTo ||
-		path.ops[1] != pathOpLineTo ||
-		path.ops[2] != pathOpLineTo ||
-		path.ops[3] != pathOpLineTo {
+	if buf.ops[0] != pathOpMoveTo ||
+		buf.ops[1] != pathOpLineTo ||
+		buf.ops[2] != pathOpLineTo ||
+		buf.ops[3] != pathOpLineTo {
 		return false
 	}
 
 	/* we accept an implicit close for filled paths */
-	if len(path.ops) > 4 {
+	if len(buf.ops) > 4 {
 		/* Now, there are choices. The rectangle might end with a LINE_TO
 		 * (to the original point), but this isn't required. If it
 		 * doesn't, then it must end with a CLOSE_PATH. */
-		if path.ops[4] == pathOpLineTo {
-			if path.points[4].x != path.points[0].x ||
-				path.points[4].y != path.points[0].y {
+		if buf.ops[4] == pathOpLineTo {
+			if buf.points[4].x != buf.points[0].x ||
+				buf.points[4].y != buf.points[0].y {
 				return false
 			}
-		} else if path.ops[4] != pathOpClosePath {
+		} else if buf.ops[4] != pathOpClosePath {
 			return false
 		}
 
-		if len(path.ops) == 6 {
+		if len(buf.ops) == 6 {
 			/* A trailing CLOSE_PATH or MOVE_TO is ok */
-			if path.ops[5] != pathOpMoveTo &&
-				path.ops[5] != pathOpClosePath {
+			if buf.ops[5] != pathOpMoveTo &&
+				buf.ops[5] != pathOpClosePath {
 				return false
 			}
 		}
@@ -873,8 +881,9 @@ func (path *pathFixed) isBox(box *box) bool {
 		return false
 	}
 
-	if pointsFromRect(path.points) {
-		canonicalBox(box, &path.points[0], &path.points[2])
+	buf := path.head()
+	if pointsFromRect(buf.points) {
+		canonicalBox(box, &buf.points[0], &buf.points[2])
 		return true
 	}
 
@@ -941,7 +950,7 @@ func (path *pathFixed) isSimpleQuad() bool {
 		return false
 	}
 
-	points := path.points
+	points := path.head().points
 	if pointsFromRect(points) {
 		return true
 	}
@@ -962,36 +971,37 @@ func (path *pathFixed) isStrokeBox(box *box) bool {
 		return false
 	}
 
+	buf := path.head()
 	/* Do we have the right number of ops? */
-	if len(path.ops) != 5 {
+	if len(buf.ops) != 5 {
 		return false
 	}
 
 	/* Check whether the ops are those that would be used for a rectangle */
-	if path.ops[0] != pathOpMoveTo ||
-		path.ops[1] != pathOpLineTo ||
-		path.ops[2] != pathOpLineTo ||
-		path.ops[3] != pathOpLineTo ||
-		path.ops[4] != pathOpClosePath {
+	if buf.ops[0] != pathOpMoveTo ||
+		buf.ops[1] != pathOpLineTo ||
+		buf.ops[2] != pathOpLineTo ||
+		buf.ops[3] != pathOpLineTo ||
+		buf.ops[4] != pathOpClosePath {
 		return false
 	}
 
 	/* Ok, we may have a box, if the points line up */
-	if path.points[0].y == path.points[1].y &&
-		path.points[1].x == path.points[2].x &&
-		path.points[2].y == path.points[3].y &&
-		path.points[3].x == path.points[0].x {
+	if buf.points[0].y == buf.points[1].y &&
+		buf.points[1].x == buf.points[2].x &&
+		buf.points[2].y == buf.points[3].y &&
+		buf.points[3].x == buf.points[0].x {
 
-		canonicalBox(box, &path.points[0], &path.points[2])
+		canonicalBox(box, &buf.points[0], &buf.points[2])
 		return true
 	}
 
-	if path.points[0].x == path.points[1].x &&
-		path.points[1].y == path.points[2].y &&
-		path.points[2].x == path.points[3].x &&
-		path.points[3].y == path.points[0].y {
+	if buf.points[0].x == buf.points[1].x &&
+		buf.points[1].y == buf.points[2].y &&
+		buf.points[2].x == buf.points[3].x &&
+		buf.points[3].y == buf.points[0].y {
 
-		canonicalBox(box, &path.points[0], &path.points[2])
+		canonicalBox(box, &buf.points[0], &buf.points[2])
 		return true
 	}
 
@@ -1006,7 +1016,8 @@ func (path *pathFixed) isRectangle(box *box) bool {
 	/* This check is valid because the current implementation of
 	 * _cairo_path_fixed_is_box () only accepts rectangles like:
 	 * move,line,line,line[,line|close[,close|move]]. */
-	if len(path.ops) > 4 {
+	buf := path.head()
+	if len(buf.ops) > 4 {
 		return true
 	}
 	return false
