@@ -42,11 +42,12 @@ type pathFixed struct {
 	buf                  []*pathBuf
 }
 
-//type pathFixedIter struct {
-//	first       *pathBuf
-//	buf         *pathBuf
-//	nOp, nPoint uint
-//}
+type pathFixedIter struct {
+	bufIdx      int
+	path        *pathFixed
+	buf         *pathBuf
+	nOp, nPoint int
+}
 
 func (path *pathFixed) fillIsEmpty() bool {
 	return path.fillIsEmpty0

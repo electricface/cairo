@@ -35,11 +35,11 @@ cairo-clip-inline.h
 cairo-clip-boxes.c
 cairo-clip.c
 cairo-clip-region.c
+cairo-path-fixed.c
 
 进行中:
 cairo-path-fill.c
 cairo-boxes-intersect.c
-*cairo-path-fixed.c
 cairo-gstate-private.c
 
 忽略:

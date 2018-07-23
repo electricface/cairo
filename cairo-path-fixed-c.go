@@ -1022,3 +1022,136 @@ func (path *pathFixed) isRectangle(box *box) bool {
 	}
 	return false
 }
+
+func (iter *pathFixedIter) init(path *pathFixed) {
+	iter.path = path
+	iter.bufIdx = 0
+	iter.buf = path.buf[0]
+	iter.nOp = 0
+	iter.nPoint = 0
+}
+
+func (iter *pathFixedIter) nextOp() bool {
+	iter.nOp++
+	if iter.nOp >= len(iter.buf.ops) {
+		// next buf
+		iter.bufIdx++
+		if iter.bufIdx == len(iter.path.buf) {
+			iter.buf = nil
+			return false
+		}
+		iter.buf = iter.path.buf[iter.bufIdx]
+
+		iter.nOp = 0
+		iter.nPoint = 0
+	}
+	return true
+}
+
+func (_iter *pathFixedIter) isFillBox(box *box) bool {
+	if _iter.buf == nil {
+		return false
+	}
+	var points [5]point
+	iter := *_iter
+
+	if iter.nOp == len(iter.buf.ops) && !iter.nextOp() {
+		return false
+	}
+
+	/* Check whether the ops are those that would be used for a rectangle */
+	if iter.buf.ops[iter.nOp] != pathOpMoveTo {
+		return false
+	}
+	points[0] = iter.buf.points[iter.nPoint]
+	iter.nPoint++
+	if !iter.nextOp() {
+		return false
+	}
+
+	if iter.buf.ops[iter.nOp] != pathOpLineTo {
+		return false
+	}
+	points[1] = iter.buf.points[iter.nPoint]
+	iter.nPoint++
+	if !iter.nextOp() {
+		return false
+	}
+
+	/* a horizontal/vertical closed line is also a degenerate rectangle */
+	switch iter.buf.ops[iter.nOp] {
+	case pathOpClosePath:
+		iter.nextOp()
+	case pathOpMoveTo: /* implicit close */
+		box.p1 = points[0]
+		box.p2 = points[0]
+		*_iter = iter
+		return true
+	case pathOpLineTo:
+		break
+	default:
+		return false
+	}
+
+	points[2] = iter.buf.points[iter.nPoint]
+	iter.nPoint++
+	if !iter.nextOp() {
+		return false
+	}
+
+	if iter.buf.ops[iter.nOp] != pathOpLineTo {
+		return false
+	}
+	points[3] = iter.buf.points[iter.nPoint]
+	iter.nPoint++
+
+	/* Now, there are choices. The rectangle might end with a LINE_TO
+	 * (to the original point), but this isn't required. If it
+	 * doesn't, then it must end with a CLOSE_PATH (which may be implicit). */
+	if !iter.nextOp() {
+		/* implicit close due to fill */
+	} else if iter.buf.ops[iter.nOp] == pathOpLineTo {
+		points[4] = iter.buf.points[iter.nPoint]
+		iter.nPoint++
+		if points[4].x != points[0].x || points[4].y != points[0].y {
+			return false
+		}
+		iter.nextOp()
+	} else if iter.buf.ops[iter.nOp] == pathOpClosePath {
+		iter.nextOp()
+	} else if iter.buf.ops[iter.nOp] == pathOpMoveTo {
+		/* implicit close-path due to new-sub-path */
+	} else {
+		return false
+	}
+
+	/* Ok, we may have a box, if the points line up */
+	if points[0].y == points[1].y &&
+		points[1].x == points[2].x &&
+		points[2].y == points[3].y &&
+		points[3].x == points[0].x {
+		box.p1 = points[0]
+		box.p2 = points[2]
+		*_iter = iter
+		return true
+	}
+
+	if points[0].x == points[1].x &&
+		points[1].y == points[2].y &&
+		points[2].x == points[3].x &&
+		points[3].y == points[0].y {
+		box.p1 = points[1]
+		box.p2 = points[3]
+		*_iter = iter
+		return true
+	}
+
+	return false
+}
+
+func (iter *pathFixedIter) addEnd() bool {
+	if iter.buf == nil {
+		return true
+	}
+	return iter.nOp == len(iter.buf.ops)
+}
