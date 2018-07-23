@@ -2,7 +2,7 @@ package cairo
 
 import "math"
 
-func splineIntersects(a, b, c, d *point, box0 box) bool {
+func splineIntersects(a, b, c, d *point, box0 *box) bool {
 	var bounds box
 	if box0.containsPoint(a) ||
 		box0.containsPoint(b) ||
@@ -73,7 +73,7 @@ func (s *spline) addPoint(point0, knot *point) Status {
 	slope0.init(point0, knot)
 	s.lastPoint = *point0
 
-	return s.addPointFunc(point0, &slope0)
+	return s.addPointFunc(s.closure, point0, &slope0)
 }
 
 func lerpHalf(a, b, result *point) {

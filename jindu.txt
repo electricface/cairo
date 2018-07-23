@@ -38,7 +38,7 @@ cairo-clip-region.c
 cairo-path-fixed.c
 
 进行中:
-cairo-path-fill.c
+*cairo-path-fill.c
 cairo-boxes-intersect.c
 cairo-gstate-private.c
 
